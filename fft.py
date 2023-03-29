@@ -56,6 +56,7 @@ def fastFourierTransform2D(x):
     for l in range(len(x)):
         for k in range(len(x[0])):
             progress = 100 * (k + (l*len(x[0]))) / (len(x)*len(x[0]))
+            print("{}%".format(progress))
             out[l][k] = fastFourierTransform2D_Inner(x, k, l)
     return out
 
@@ -100,7 +101,6 @@ def inverseFastFourierTransform2D(X):
     return out
 
 def nearestPowerOf2(x):
-    print(x)
     i = 1
     while i*2 < x:
         i *= 2
@@ -108,7 +108,6 @@ def nearestPowerOf2(x):
         return i*2
     else:
         return i 
-
 
 arguments = {}
 nextArg = None
@@ -147,22 +146,22 @@ if not os.path.isfile(pwd + "/" + inputFile):
     exit()
 
 img = cv2.imread(pwd + "/" + inputFile)
-
-img = cv2.resize(img, (nearestPowerOf2(img.shape[0]), nearestPowerOf2(img.shape[1])))
+#nearestPowerOf2(img.shape[0]), nearestPowerOf2(img.shape[1])
+img = cv2.resize(img, (32,32))
 b,g,r = cv2.split(img)
-
-print(img.shape)
 
 if mode == 1:
     #image converted to FFT and displayed alongside original
-    r_fft = fastFourierTransform2D(r)
+    r_fft = fastFourierTransform2D(r).real
     print("transformed r")
-    g_fft = fastFourierTransform2D(g)
+    g_fft = fastFourierTransform2D(g).real
     print("transformed g")
-    b_fft = fastFourierTransform2D(b)
+    b_fft = fastFourierTransform2D(b).real
     print("transformed b")
     fft_img = cv2.merge((b_fft, g_fft, r_fft))
-    #normalized_fft = cv2.normalize(fft_img, None, 0, 255, cv2.NORM_MINMAX, dtype = cv2.CV_8U)
+    logged = np.uint8(np.log1p(fft_img))
+    normalized_fft = cv2.normalize(logged, None, 0, 255, cv2.NORM_MINMAX, dtype =cv2.CV_8U)
+    print(fft_img)
     #combined_imgs = np.concatenate((img, normalized_fft), axis=1)
     cv2.imshow("original", img)
     cv2.waitKey(0)
