@@ -153,7 +153,6 @@ if mode == 1:
     fft_img = fastFourierTransform2D(img).real
     logged = np.log1p(fft_img)
     normalized_fft = cv2.normalize(logged, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-    print(normalized_fft)
     #combined_imgs = np.concatenate((img, normalized_fft), axis=1)
     cv2.imshow("original", img)
     cv2.waitKey(0)
@@ -163,7 +162,6 @@ if mode == 1:
     fft_img = np.fft.fft2(img).real
     logged = np.log1p(fft_img)
     normalized_fft = cv2.normalize(logged, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-    print(normalized_fft)
     #combined_imgs = np.concatenate((img, normalized_fft), axis=1)
     cv2.imshow("original", img)
     cv2.waitKey(0)
