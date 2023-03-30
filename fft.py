@@ -54,9 +54,9 @@ def fastFourierTransform2D_Inner(x, k, l):
 def fastFourierTransform2D(x):
     out = np.zeros((len(x), len(x[0])), dtype=np.complex_)
     for l in range(len(x)):
+        progress = 100 * (l*len(x[0])) / (len(x)*len(x[0]))
+        print("{}%".format(progress))
         for k in range(len(x[0])):
-            progress = 100 * (k + (l*len(x[0]))) / (len(x)*len(x[0]))
-            print("{}%".format(progress))
             out[l][k] = fastFourierTransform2D_Inner(x, k, l)
     return out
 
@@ -145,27 +145,29 @@ if not os.path.isfile(pwd + "/" + inputFile):
     print("ERROR\tIncorrect input: file {} does not exist in the current directory.".format(inputFile))
     exit()
 
-img = cv2.imread(pwd + "/" + inputFile)
-#nearestPowerOf2(img.shape[0]), nearestPowerOf2(img.shape[1])
-img = cv2.resize(img, (32,32))
-b,g,r = cv2.split(img)
+img = cv2.imread(pwd + "/" + inputFile, 0)
+img = cv2.resize(img, (nearestPowerOf2(img.shape[0]), nearestPowerOf2(img.shape[1])))
 
 if mode == 1:
     #image converted to FFT and displayed alongside original
-    r_fft = fastFourierTransform2D(r).real
-    print("transformed r")
-    g_fft = fastFourierTransform2D(g).real
-    print("transformed g")
-    b_fft = fastFourierTransform2D(b).real
-    print("transformed b")
-    fft_img = cv2.merge((b_fft, g_fft, r_fft))
-    logged = np.uint8(np.log1p(fft_img))
-    normalized_fft = cv2.normalize(logged, None, 0, 255, cv2.NORM_MINMAX, dtype =cv2.CV_8U)
-    print(fft_img)
+    fft_img = fastFourierTransform2D(img).real
+    logged = np.log1p(fft_img)
+    normalized_fft = cv2.normalize(logged, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    print(normalized_fft)
     #combined_imgs = np.concatenate((img, normalized_fft), axis=1)
     cv2.imshow("original", img)
     cv2.waitKey(0)
-    cv2.imshow("log-scaled fft", normalized_fft)
+    cv2.imshow("log-scaled fft (our implementation)", normalized_fft)
+    cv2.waitKey(0)
+
+    fft_img = np.fft.fft2(img).real
+    logged = np.log1p(fft_img)
+    normalized_fft = cv2.normalize(logged, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    print(normalized_fft)
+    #combined_imgs = np.concatenate((img, normalized_fft), axis=1)
+    cv2.imshow("original", img)
+    cv2.waitKey(0)
+    cv2.imshow("log-scaled fft (with numpy)", normalized_fft)
     cv2.waitKey(0)
 
 elif mode == 2:
