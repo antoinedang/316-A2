@@ -13,14 +13,12 @@ def verifyValidity(name, value):
             print("ERROR\tIncorrect mode argument: mode must be one of [1,2,3,4].")
             exit()
 
-#WORKS
 def discreteFourierTransform(x, k):
     Xk = complex(0,0)
     for n in range(len(x)):
         Xk += x[n]*np.exp(math.pi*complex(0,-2)*k*n/len(x))
     return Xk
 
-#WORKS
 def discreteFourierTransform1D(x):
     X = []
     for k in range(len(x)):
@@ -28,8 +26,7 @@ def discreteFourierTransform1D(x):
         X.append(Xk)
     return np.array(X)
 
-#WORKS
-fft_threshold = 16
+fft_threshold = 8
 def fastFourierTransform(x, k):
     if len(x) <= fft_threshold:
         return(discreteFourierTransform(x, k))
@@ -38,7 +35,6 @@ def fastFourierTransform(x, k):
     Xk = fastFourierTransform(x_even, k) + np.exp(-2*math.pi*complex(0,1)*k/len(x))*fastFourierTransform(x_odd, k)
     return Xk
 
-#WORKS
 def fastFourierTransform1D(x):
     X = []
     for k in range(len(x)):
@@ -46,21 +42,19 @@ def fastFourierTransform1D(x):
         X.append(Xk)
     return np.array(X)
 
-#WORKS
 def fastFourierTransform2D_Inner(x, k, l):
     return fastFourierTransform(fastFourierTransform(x, l), k)
 
-#WORKS
-def fastFourierTransform2D(x):
+def fastFourierTransform2D(x, show_progress=True):
     out = np.zeros((len(x), len(x[0])), dtype=np.complex_)
     for l in range(len(x)):
-        progress = 100 * (l*len(x[0])) / (len(x)*len(x[0]))
-        print("{}%".format(progress))
+        if show_progress:
+            progress = 100 * (l*len(x[0])) / (len(x)*len(x[0]))
+            print("{}%".format(progress))
         for k in range(len(x[0])):
             out[l][k] = fastFourierTransform2D_Inner(x, k, l)
     return out
 
-#WORKS
 def inverseDiscreteFourierTransform(X, n, N=None):
     if N == None:
         N = len(X)
@@ -69,7 +63,6 @@ def inverseDiscreteFourierTransform(X, n, N=None):
         xn += X[k]*np.exp(math.pi*complex(0,2)*k*n/len(X))
     return (xn / N)
 
-#WORKS
 def inverseFastFourierTransform(X, n, N=None):
     if N == None:
         N = len(X)
@@ -108,6 +101,42 @@ def nearestPowerOf2(x):
         return i*2
     else:
         return i 
+
+def testFTs():
+    random_shape_w = 2**np.random.randint(0, 6)
+    random_shape_h = 2**np.random.randint(0, 6)
+    test_matrix = np.random.rand(random_shape_w, random_shape_h)
+    for test_row in test_matrix:
+        #TEST 1D for each row
+        np_fft = np.fft.fft(test_row)
+        our_dft = discreteFourierTransform1D(test_row)
+        our_fft = fastFourierTransform1D(test_row)
+        if not np.allclose(np_fft, our_dft):
+            print("FAILED TEST\tour 1D DFT != numpy 1D FFT.")
+            return False
+        if not np.allclose(np_fft, our_fft):
+            print("FAILED TEST\tour 1D FFT != numpy 1D FFT.")
+            return False
+        original = inverseFastFourierTransform1D(np_fft)
+        np_original = np.fft.ifft(np_fft)
+        if not np.allclose(original, np_original):
+            print("FAILED TEST\tour 1D IFFT != numpy 1D IFFT.")
+            return False
+    #TEST 2D for matrix
+    np_fft = np.fft.fft2(test_matrix)
+    our_fft = fastFourierTransform2D(test_matrix, show_progress=False)
+    if not np.allclose(np_fft, our_fft):
+        print("FAILED TEST\tour 2D FFT != numpy 2D FFT.")
+        return False
+    original = inverseFastFourierTransform2D(np_fft)
+    np_original = np.fft.ifft2(np_fft)
+    if not np.allclose(original, np_original):
+        print("FAILED TEST\tour 2D IFFT != numpy 2D IFFT.")
+        return False
+    return True
+
+if testFTs(): print("ALL TESTS PASSED!")
+else: exit()
 
 arguments = {}
 nextArg = None
@@ -153,24 +182,80 @@ if mode == 1:
     fft_img = fastFourierTransform2D(img).real
     logged = np.log1p(fft_img)
     normalized_fft = cv2.normalize(logged, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-    #combined_imgs = np.concatenate((img, normalized_fft), axis=1)
-    cv2.imshow("original", img)
+    display = np.concatenate((img, normalized_fft), axis=1)
+    cv2.imshow("log scaled fft (our implementation)", display)
     cv2.waitKey(0)
-    cv2.imshow("log-scaled fft (our implementation)", normalized_fft)
-    cv2.waitKey(0)
-
-    fft_img = np.fft.fft2(img).real
-    logged = np.log1p(fft_img)
-    normalized_fft = cv2.normalize(logged, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-    #combined_imgs = np.concatenate((img, normalized_fft), axis=1)
-    cv2.imshow("original", img)
-    cv2.waitKey(0)
-    cv2.imshow("log-scaled fft (with numpy)", normalized_fft)
-    cv2.waitKey(0)
+    #WITH NUMPY
+    #fft_img = np.fft.fft2(img).real
+    #logged = np.log1p(fft_img)
+    #normalized_fft = cv2.normalize(logged, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    #display = np.concatenate((img, normalized_fft), axis=1)
+    #cv2.imshow("log scaled fft (with numpy)", display)
+    #cv2.waitKey(0)
 
 elif mode == 2:
     #denoise image by applying GGT, truncating high frequencies, and displaying it alongside original
+    fft_img = np.fft.fft2(img)
+
+    #DENOISING METHOD 1 - removing low frequencies 
+    #keep only central part of image to reduce low frequencies
+    low_freq_threshold = 0.8
+    denoised_fft = fft_img.copy()
+    rows, cols = denoised_fft.shape
+    denoised_fft[:, :int(cols*(0.5-low_freq_threshold/2))] = complex(0,0)
+    denoised_fft[:, int(cols*(0.5+low_freq_threshold/2)):] = complex(0,0)
+    denoised_fft[:int(rows*(0.5-low_freq_threshold/2)), :] = complex(0,0)
+    denoised_fft[int(rows*(0.5+low_freq_threshold/2)):, :] = complex(0,0)
+    #apply inverse and normalization to display
+    denoised_img = np.fft.ifft2(denoised_fft).real
+    denoised_img_normalized = cv2.normalize(denoised_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    display = np.concatenate((img, denoised_img_normalized), axis=1)
+    cv2.imshow("denoised (only high frequencies)", display)
+    cv2.waitKey(0)
+
+    #DENOISING METHOD 2 - removing high frequencies
+    #keep only corners of image to remove high frequencies (all central parts of image axes are the highest frequencies)
+    high_freq_threshold = 0.8
+    denoised_fft = fft_img.copy()
+    rows, cols = denoised_fft.shape
+    denoised_fft[int(rows*(0.5-high_freq_threshold/2)):int(rows*(0.5+high_freq_threshold/2)), :] = complex(0,0)
+    denoised_fft[:, int(cols*(0.5-high_freq_threshold/2)):int(cols*(0.5+high_freq_threshold/2))] = complex(0,0)
+    #apply inverse and normalization to display
+    denoised_img = np.fft.ifft2(denoised_fft).real
+    denoised_img_normalized = cv2.normalize(denoised_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    display = np.concatenate((img, denoised_img_normalized), axis=1)
+    cv2.imshow("denoised (only low frequencies)", display)
+    cv2.waitKey(0)
+
+    #DENOISING METHOD 3 - removing low and high frequencies
+    #keep only corners of image to remove high frequencies (all central parts of image are the highest frequencies)
+    high_freq_threshold = 0.8
+    denoised_fft = fft_img.copy()
+    rows, cols = denoised_fft.shape
+    denoised_fft[int(rows*(0.5-high_freq_threshold/2)):int(rows*(0.5+high_freq_threshold/2)), :] = complex(0,0)
+    denoised_fft[:, int(cols*(0.5-high_freq_threshold/2)):int(cols*(0.5+high_freq_threshold/2))] = complex(0,0)
+    denoised_fft_normalized = cv2.normalize(denoised_fft.imag, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    cv2.imshow("filtered fft", denoised_fft_normalized)
+    cv2.waitKey(0)
+    #remove borders at corners to remove lower frequencies
+    low_freq_threshold = 0.98
+    rows, cols = denoised_fft.shape
+    denoised_fft[int(rows*(0.5+low_freq_threshold/2)):, :int(cols*(0.5-low_freq_threshold/2))] = complex(0,0)
+    denoised_fft[:int(rows*(0.5-low_freq_threshold/2)), :int(cols*(0.5-low_freq_threshold/2))] = complex(0,0)
+    denoised_fft[int(rows*(0.5+low_freq_threshold/2)):, int(cols*(0.5+low_freq_threshold/2)):] = complex(0,0)
+    denoised_fft[:int(rows*(0.5-low_freq_threshold/2)), int(cols*(0.5+low_freq_threshold/2)):] = complex(0,0)
+    denoised_fft_normalized = cv2.normalize(denoised_fft.real, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    cv2.imshow("filtered fft", denoised_fft_normalized)
+    cv2.waitKey(0)
+    #combine high and low freqs, apply inverse and normalization to display
+    denoised_img = np.fft.ifft2(denoised_fft).real
+    denoised_img_normalized = cv2.normalize(denoised_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    display = np.concatenate((img, denoised_img_normalized), axis=1)
+    cv2.imshow("denoised (remove low + high frequencies)", display)
+    cv2.waitKey(0)
     pass
+
+
 elif mode == 3:
     #take FFT of image to compress it, display 6 different levels of compression from 0 to 95%
     #for each compression save to .txt or .csv file
