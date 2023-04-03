@@ -153,7 +153,7 @@ def testFTs():
 
 def denoisingExperiments(img):
     #denoise image by applying GGT, truncating high frequencies, and displaying it alongside original
-    fft_img = np.fft.fft2(img)
+    fft_img = fastFourierTransform2D(img)
     #DENOISING METHOD 1 - removing low frequencies 
     #keep only central part of image to reduce low frequencies
     low_freq_threshold = 0.8
@@ -164,7 +164,7 @@ def denoisingExperiments(img):
     denoised_fft[:int(rows*(0.5-low_freq_threshold/2)), :] = complex(0,0)
     denoised_fft[int(rows*(0.5+low_freq_threshold/2)):, :] = complex(0,0)
     #apply inverse and normalization to display
-    denoised_img = np.fft.ifft2(denoised_fft).real
+    denoised_img = inverseFastFourierTransform2D(denoised_fft).real
     denoised_img_normalized = cv2.normalize(denoised_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     display = np.concatenate((img, denoised_img_normalized), axis=1)
     cv2.imshow("denoised (only high frequencies)", display)
@@ -178,7 +178,7 @@ def denoisingExperiments(img):
     denoised_fft[int(rows*(0.5-high_freq_threshold/2)):int(rows*(0.5+high_freq_threshold/2)), :] = complex(0,0)
     denoised_fft[:, int(cols*(0.5-high_freq_threshold/2)):int(cols*(0.5+high_freq_threshold/2))] = complex(0,0)
     #apply inverse and normalization to display
-    denoised_img = np.fft.ifft2(denoised_fft).real
+    denoised_img = inverseFastFourierTransform2D(denoised_fft).real
     denoised_img_normalized = cv2.normalize(denoised_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     display = np.concatenate((img, denoised_img_normalized), axis=1)
     cv2.imshow("denoised (only low frequencies)", display)
@@ -199,7 +199,7 @@ def denoisingExperiments(img):
     denoised_fft[int(rows*(0.5+low_freq_threshold/2)):, int(cols*(0.5+low_freq_threshold/2)):] = complex(0,0)
     denoised_fft[:int(rows*(0.5-low_freq_threshold/2)), int(cols*(0.5+low_freq_threshold/2)):] = complex(0,0)
     #combine high and low freqs, apply inverse and normalization to display
-    denoised_img = np.fft.ifft2(denoised_fft).real
+    denoised_img = inverseFastFourierTransform2D(denoised_fft).real
     denoised_img_normalized = cv2.normalize(denoised_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     display = np.concatenate((img, denoised_img_normalized), axis=1)
     cv2.imshow("denoised (removed high frequencies low + high frequencies)", display)
@@ -259,7 +259,7 @@ def clipExtremeValues(img, deviation_range=2):
     return img
 
 def compressionExperiments(img):
-    fft_img = np.fft.fft2(img)
+    fft_img = fastFourierTransform2D(img)
     #take FFT of image to compress it, display 6 different levels of compression from 0 to 95%
 
     #COMPRESSION METHOD 1: only keep top percent largest coefficients
@@ -268,11 +268,11 @@ def compressionExperiments(img):
     compressed_fft3 = zeroOutSmallestValues(fft_img, fractionToKeep=0.50)
     compressed_fft4 = zeroOutSmallestValues(fft_img, fractionToKeep=0.20)
     compressed_fft5 = zeroOutSmallestValues(fft_img, fractionToKeep=0.05)
-    compressed_img1 = np.fft.ifft2(compressed_fft1).real
-    compressed_img2 = np.fft.ifft2(compressed_fft1).real
-    compressed_img3 = np.fft.ifft2(compressed_fft1).real
-    compressed_img4 = np.fft.ifft2(compressed_fft1).real
-    compressed_img5 = np.fft.ifft2(compressed_fft1).real
+    compressed_img1 = inverseFastFourierTransform2D(compressed_fft1).real
+    compressed_img2 = inverseFastFourierTransform2D(compressed_fft1).real
+    compressed_img3 = inverseFastFourierTransform2D(compressed_fft1).real
+    compressed_img4 = inverseFastFourierTransform2D(compressed_fft1).real
+    compressed_img5 = inverseFastFourierTransform2D(compressed_fft1).real
     
     compressed_img1 = cv2.normalize(compressed_img1, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     compressed_img2 = cv2.normalize(compressed_img2, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
@@ -295,11 +295,11 @@ def compressionExperiments(img):
     compressed_fft3 = zeroOutSmallestValuesKeepLowFrequencies(fft_img, fractionToKeep=0.50)
     compressed_fft4 = zeroOutSmallestValuesKeepLowFrequencies(fft_img, fractionToKeep=0.20)
     compressed_fft5 = zeroOutSmallestValuesKeepLowFrequencies(fft_img, fractionToKeep=0.05)
-    compressed_img1 = np.fft.ifft2(compressed_fft1).real
-    compressed_img2 = np.fft.ifft2(compressed_fft1).real
-    compressed_img3 = np.fft.ifft2(compressed_fft1).real
-    compressed_img4 = np.fft.ifft2(compressed_fft1).real
-    compressed_img5 = np.fft.ifft2(compressed_fft1).real
+    compressed_img1 = inverseFastFourierTransform2D(compressed_fft1).real
+    compressed_img2 = inverseFastFourierTransform2D(compressed_fft1).real
+    compressed_img3 = inverseFastFourierTransform2D(compressed_fft1).real
+    compressed_img4 = inverseFastFourierTransform2D(compressed_fft1).real
+    compressed_img5 = inverseFastFourierTransform2D(compressed_fft1).real
 
     compressed_img1 = cv2.normalize(compressed_img1, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     compressed_img2 = cv2.normalize(compressed_img2, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
@@ -322,11 +322,11 @@ def compressionExperiments(img):
     compressed_fft3 = zeroOutSmallestValuesKeepLowFrequencies(fft_img, fractionToKeep=0.50)
     compressed_fft4 = zeroOutSmallestValuesKeepLowFrequencies(fft_img, fractionToKeep=0.20)
     compressed_fft5 = zeroOutSmallestValuesKeepLowFrequencies(fft_img, fractionToKeep=0.05)
-    compressed_img1 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
-    compressed_img2 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
-    compressed_img3 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
-    compressed_img4 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
-    compressed_img5 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
+    compressed_img1 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
+    compressed_img2 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
+    compressed_img3 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
+    compressed_img4 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
+    compressed_img5 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
 
     compressed_img1 = cv2.normalize(compressed_img1, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     compressed_img2 = cv2.normalize(compressed_img2, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
@@ -426,7 +426,7 @@ elif mode == 2:
 
 
 elif mode == 3:
-    fft_img = np.fft.fft2(img)
+    fft_img = fastFourierTransform2D(img)
     #take FFT of image to compress it, display 6 different levels of compression from 0 to 95%
 
     #COMPRESSION METHOD: keep all low frequencises and top percent of largest coefficients + remove extreme values from resulting image
@@ -435,11 +435,11 @@ elif mode == 3:
     compressed_fft3 = zeroOutSmallestValuesKeepLowFrequencies(fft_img, fractionToKeep=0.50)
     compressed_fft4 = zeroOutSmallestValuesKeepLowFrequencies(fft_img, fractionToKeep=0.20)
     compressed_fft5 = zeroOutSmallestValuesKeepLowFrequencies(fft_img, fractionToKeep=0.05)
-    compressed_img1 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
-    compressed_img2 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
-    compressed_img3 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
-    compressed_img4 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
-    compressed_img5 = clipExtremeValues(np.fft.ifft2(compressed_fft1).real)
+    compressed_img1 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
+    compressed_img2 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
+    compressed_img3 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
+    compressed_img4 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
+    compressed_img5 = clipExtremeValues(inverseFastFourierTransform2D(compressed_fft1).real)
 
     compressed_img1 = cv2.normalize(compressed_img1, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     compressed_img2 = cv2.normalize(compressed_img2, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
@@ -486,7 +486,7 @@ elif mode == 3:
 elif mode == 4:
     #plot runtime graphs
     number_runs = 10
-    problem_sizes = [2**5, 2**6, 2**7, 2**8, 2**9]
+    problem_sizes = [2**5, 2**6, 2**7, 2**8]
     runtimes_DFT = np.zeros((number_runs, len(problem_sizes)))
     runtimes_FFT = np.zeros((number_runs, len(problem_sizes)))
     for n in range(number_runs):
