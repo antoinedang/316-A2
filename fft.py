@@ -202,7 +202,7 @@ def denoisingExperiments(img):
     denoised_img = inverseFastFourierTransform2D(denoised_fft).real
     denoised_img_normalized = cv2.normalize(denoised_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     display = np.concatenate((img, denoised_img_normalized), axis=1)
-    cv2.imshow("denoised (removed high frequencies low + high frequencies)", display)
+    cv2.imshow("denoised (removed high + low frequencies)", display)
     cv2.waitKey(0)
     exit()
 
@@ -384,6 +384,7 @@ img = cv2.imread(pwd + "/" + inputFile, 0)
 img = cv2.resize(img, (nearestPowerOf2(img.shape[0]), nearestPowerOf2(img.shape[1])))
 
 #denoisingExperiments(img)
+#compressionExperiments(img)
 
 if mode == 1:
     #image converted to FFT and displayed alongside original
@@ -421,7 +422,9 @@ elif mode == 2:
     denoised_img = inverseFastFourierTransform2D(denoised_fft).real
     denoised_img_normalized = cv2.normalize(denoised_img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     display = np.concatenate((img, denoised_img_normalized), axis=1)
-    cv2.imshow("denoised (removed high frequencies low + high frequencies)", display)
+    print("Denoised image nonzero coefficients: {}".format(np.count_nonzero(denoised_fft)))
+    print("Fraction of nonzero coefficients compared to original image: {}%".format(100*np.count_nonzero(denoised_fft)/np.count_nonzero(fft_img)))
+    cv2.imshow("denoised (removed high + low frequencies)", display)
     cv2.waitKey(0)
 
 
@@ -486,7 +489,7 @@ elif mode == 3:
 elif mode == 4:
     #plot runtime graphs
     number_runs = 10
-    problem_sizes = [2**5, 2**6, 2**7, 2**8]
+    problem_sizes = [2**5, 2**6, 2**7, 2**8, 2**9, 2**10]
     runtimes_DFT = np.zeros((number_runs, len(problem_sizes)))
     runtimes_FFT = np.zeros((number_runs, len(problem_sizes)))
     for n in range(number_runs):
@@ -506,6 +509,10 @@ elif mode == 4:
     stds_DFT = np.std(runtimes_DFT, axis=0)
     means_FFT = np.mean(runtimes_FFT, axis=0)
     stds_FFT = np.std(runtimes_FFT, axis=0)
+    print("Naive Fourier Transform Mean Runtimes", means_DFT)
+    print("Fast Fourier Transform Mean Runtimes", means_FFT)
+    print("Naive Fourier Transform Standard Deviations", stds_DFT)
+    print("Fast Fourier Transform Standard Deviations", stds_FFT)
     plt.figure()
     plt.plot(problem_sizes, means_DFT)
     plt.errorbar(problem_sizes, means_DFT, 2*stds_DFT)
